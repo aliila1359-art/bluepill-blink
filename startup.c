@@ -18,6 +18,6 @@ void Reset_Handler(void) {
 
 __attribute__((section(".isr_vector")))
 func_ptr vector_table[] = {
-    (func_ptr0x20005000), // Stack Pointer
+    (func_ptr)0x20005000, // Stack Pointer
     (func_ptr)Reset_Handler
 };
