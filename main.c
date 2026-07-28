@@ -1,28 +1,29 @@
-#include "stm32f1xx.h"
+// تعریف آدرس‌های رجیستری STM32F103 بدون نیاز به فایل‌های خارجی
+#define RCC_APB2ENR   (*(volatile unsigned int*) 0x40021018)
+#define GPIOC_CRH     (*(volatile unsigned int*) 0x40011004)
+#define GPIOC_BSRR    (*(volatile unsigned int*) 0x40011010)
 
-// یک تاخیر ساده نرم‌افزاری
-void delay(volatile uint32_t count) {
+void delay(volatile unsigned int count) {
     while (count--) {
-        __NOP();
+        __asm__("nop");
     }
 }
 
 int main(void) {
-    // فعال‌سازی کلاک برای پورت C
-    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    // فعال‌سازی کلاک پورت C (بیت 4 رجیستری APB2ENR)
+    RCC_APB2ENR |= (1 << 4);
 
-    // تنظیم پین PC13 به عنوان خروجی پوش-پول (Push-Pull Output) با سرعت 2MHz
-    // در رجیستری CRH، پین 13 مربوط به بیت‌های 20 تا 23 است
-    GPIOC->CRH &= ~(0xF << 20); // پاک کردن تنظیمات قبلی
-    GPIOC->CRH |=  (0x2 << 20); // خروجی با سرعت 2MHz
+    // تنظیم پین PC13 به عنوان خروجی (پاک کردن بیت‌های 20 تا 23 و قرار دادن مقدار 2)
+    GPIOC_CRH &= ~(0xF << 20);
+    GPIOC_CRH |=  (0x2 << 20);
 
     while (1) {
-        // روشن کردن LED (در برد بلوپیل معمولاً با صفر شدن منطقی پین PC13 روشن می‌شود)
-        GPIOC->BSRR = (1 << (13 + 16)); // ریست کردن بیت 13 (Low)
+        // روشن کردن LED (صفر کردن پین 13 با استفاده از بخش ریست BSRR)
+        GPIOC_BSRR = (1 << (13 + 16));
         delay(500000);
 
-        // خاموش کردن LED (یک شدن منطقی پین PC13)
-        GPIOC->BSRR = (1 << 13); // ست کردن بیت 13 (High)
+        // خاموش کردن LED (یک کردن پین 13)
+        GPIOC_BSRR = (1 << 13);
         delay(500000);
     }
 }
